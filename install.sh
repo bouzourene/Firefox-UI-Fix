@@ -106,9 +106,9 @@ paths_filter() {
   local foundedTargets=()
   for checkTarget in "${pathList[@]}"; do
     if [ "$option" "$checkTarget" ]; then
-      # If an additional file check was provided, check that the file exists in the directory
-      # We use this to exclude paths that exist on the filesystem but do not actually in use
-      # This fixes an issue with KDE creating directories for the plasma integration
+      # If an additional file check was provided, check that the file exists in the directory.
+      # We use this to exclude paths that exist on the filesystem but are not actually in use.
+      # This fixes an issue with KDE creating directories for the plasma integration.
       # https://github.com/black7375/Firefox-UI-Fix/issues/1117
       if [ -n "$checkFileExists" ]; then
         if [ -f "${checkTarget}/${checkFileExists}" ]; then
