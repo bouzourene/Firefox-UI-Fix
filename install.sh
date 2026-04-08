@@ -92,6 +92,7 @@ currentDir=$( cd "$(dirname $0)" ; pwd )
 paths_filter() {
   local pathListName="$1" # array name
   local option="$2"
+  local checkFileExists="$3"
 
   # Set array
   eval "local pathList=(\"\${${pathListName}[@]}\")"
@@ -105,7 +106,17 @@ paths_filter() {
   local foundedTargets=()
   for checkTarget in "${pathList[@]}"; do
     if [ "$option" "$checkTarget" ]; then
-      foundedTargets+=("$checkTarget")
+      # If an additional file check was provided, check that the file exists in the directory
+      # We use this to exclude paths that exist on the filesystem but do not actually in use
+      # This fixes an issue with KDE creating directories for the plasma integration
+      # https://github.com/black7375/Firefox-UI-Fix/issues/1117
+      if [ -n "$checkFileExists" ]; then
+        if [ -f "${checkTarget}/${checkFileExists}" ]; then
+          foundedTargets+=("$checkTarget")
+        fi
+      else
+        foundedTargets+=("$checkTarget")
+      fi
     fi
   done
 
@@ -357,13 +368,14 @@ firefoxProfileDirPaths=(
   "${HOME}/Library/Application Support/TorBrowser/Browser"
 )
 
+PROFILEINFOFILE="profiles.ini"
 check_profile_dir() {
   local profileDir="$1"
   if [ "${profileDir}" != "" ]; then
     firefoxProfileDirPaths=("${profileDir}")
   fi
 
-  paths_filter firefoxProfileDirPaths -d
+  paths_filter firefoxProfileDirPaths -d "${PROFILEINFOFILE}"
 
   local foundCount="${#firefoxProfileDirPaths[@]}"
   if [ "${foundCount}" -eq 0 ];  then
@@ -374,7 +386,6 @@ check_profile_dir() {
 }
 
 #== Profile Info ===============================================================
-PROFILEINFOFILE="profiles.ini"
 check_profile_ini() {
   for profileDir in "${firefoxProfileDirPaths[@]}"; do
     if [ ! -f "${profileDir}/${PROFILEINFOFILE}" ]; then
